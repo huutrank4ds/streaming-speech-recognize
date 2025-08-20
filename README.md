@@ -59,6 +59,7 @@
 ```bash
 git clone https://github.com/huutrank4ds/streaming-speech-recognize.git
 cd streaming-speech-recognize
+pip install -r requirements.txt
 ``` 
 ### 2) Mở giao diện web
 Mở **`index.html`** bằng **Live Server** trong VS Code  

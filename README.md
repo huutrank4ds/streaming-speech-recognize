@@ -45,7 +45,8 @@
 1. **Enable API**
    - Vào **APIs & Services** → **Enable APIs and services**.  
    - Tìm **Speech-to-Text API**.  
-   - Chọn **Cloud Speech-to-Text API** (tôi sẽ chèn ảnh vào).
+   - Chọn **Cloud Speech-to-Text API**.
+   
 
 2. **Tạo Credentials**
    - Chọn **Manage** để mở phần quản lý.  
@@ -68,6 +69,11 @@ Mở **`index.html`** bằng **Live Server** trong VS Code
 (Right-click → **Open with Live Server**).
 ### 3) Chạy server Python
 Xem mục **Cấu hình server** bên dưới để trỏ đúng tới file JSON.  
+**Cấu hình server**
+```bash
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ".env.json"
+```
+Thay ".env.json" bằng đường dẫn tới **Service Account JSON**
 Sau đó chạy:
 ```bash
 python server.py

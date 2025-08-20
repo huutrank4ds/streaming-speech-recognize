@@ -15,11 +15,7 @@
 - [☁️ Chuẩn bị Google Cloud API](#️-chuẩn-bị-google-cloud-api)
 - [📦 Cài đặt & Chạy](#-cài-đặt--chạy)
 - [🧩 Cấu hình server](#-cấu-hình-server)
-- [🗂️ Cấu trúc thư mục](#️-cấu-trúc-thư-mục)
-- [🖼️ Ảnh minh họa](#️-ảnh-minh-họa)
 - [🛠️ Troubleshooting](#️-troubleshooting)
-- [🤝 Đóng góp](#-đóng-góp)
-- [📜 Giấy phép](#-giấy-phép)
 
 ---
 
@@ -69,12 +65,22 @@ Mở **`index.html`** bằng **Live Server** trong VS Code
 (Right-click → **Open with Live Server**).
 ### 3) Chạy server Python
 Xem mục **Cấu hình server** bên dưới để trỏ đúng tới file JSON.  
-**Cấu hình server**
-```bash
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ".env.json"
-```
-Thay ".env.json" bằng đường dẫn tới **Service Account JSON**
 Sau đó chạy:
 ```bash
 python server.py
 ```
+## 🧩 Cấu hình server
+```bash
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ".env.json"
+
+HOST = "localhost"
+PORT = 8000
+LANGUAGE_CODE = "vi-VN"
+SAMPLE_RATE = 16000
+```
+Thay ".env.json" bằng đường dẫn tới **Service Account JSON**
+Thay thế LANGUAGE_CODE bằng mã ngôn ngữ bạn cần.
+## 🛠️ Troubleshooting
+- 403 / permission denied: Kiểm tra Service Account có quyền Cloud Speech-to-Text và đường dẫn JSON đúng.
+- Không nhận mic: Trình duyệt cần cấp quyền microphone; thử mở lại trang hoặc kiểm tra https/localhost.
+- Không kết nối server: Kiểm tra server.py đang chạy và URL WebSocket/HTTP khớp với client.

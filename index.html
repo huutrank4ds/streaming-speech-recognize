@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Speech to Text Realtime</title>
+    <style>
+        #transcript {
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 50px;
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+        #status {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chuyển đổi giọng nói thành văn bản (Realtime)</h1>
+    <p id="status">Trạng thái: Đang kết nối...</p>
+    <button id="startButton" disabled>Bắt đầu</button>
+    <button id="stopButton" disabled>Dừng</button>
+    <div id="transcript"></div>
+    <script src="app.js"></script>
+</body>
+</html>

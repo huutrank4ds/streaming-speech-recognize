@@ -3,9 +3,27 @@ import websockets
 from google.cloud import speech
 import os
 import json # Thêm thư viện json
+import argparse
+
+parser = argparse.ArgumentParser(description="Streaming Speech Recognize Server")
+parser.add_argument(
+    "--key", 
+    type=str, 
+    default=".env.json",
+    required=True, 
+    help="Path to Google Cloud service account JSON key"
+)
+parser.add_argument(
+    "--port", 
+    type=int, 
+    default=8000,
+    required=True, 
+    help="Port to run the WebSocket server"
+)
+args = parser.parse_args()
 
 # --- LƯU Ý BẢO MẬT ---
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ".env.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = args.key
 
 HOST = "localhost"
 PORT = 8000

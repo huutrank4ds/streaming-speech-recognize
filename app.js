@@ -5,56 +5,48 @@ let audioContext;
 let processor;
 let input;
 let stream;
-let isRecording = false;
-let isPaused = false;
+let is_recording = false;
 
-const VAD_THRESHOLD = 0.01;
+const VAD_THRESHOLD = 0.001;
 
 const startButton = document.getElementById('startButton');
-const pauseButton = document.getElementById('pauseButton');
-const resumeButton = document.getElementById('resumeButton');
 const stopButton = document.getElementById('stopButton');
 const clearButton = document.getElementById('clearButton');
+const copyButton = document.getElementById('copyButton');
 const statusDiv = document.getElementById('status');
 const finalTranscriptSpan = document.getElementById('final-transcript');
 const interimTranscriptSpan = document.getElementById('interim-transcript');
 const volumeLevel = document.getElementById('volumeLevel');
 
 function connectWebSocket() {
+    // ws = new WebSocket('ws://localhost:8000');
     ws = new WebSocket('ws://localhost:8000');
 
     ws.onopen = () => {
         statusDiv.textContent = 'Trạng thái: Đã kết nối';
-        startButton.disabled = false;
-        pauseButton.disabled = true;
-        resumeButton.disabled = true;
-        stopButton.disabled = true;
+        if (!stream) {
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            copyButton.disabled = true;
+        }
     };
     
     ws.onmessage = (event) => {
-        // Parse chuỗi JSON nhận được
         const result = JSON.parse(event.data);
-        
         if (result.is_final) {
-            // Nếu là kết quả cuối cùng
-            // Nối nó vào phần văn bản đã xác nhận
             finalTranscriptSpan.textContent += result.transcript + ' ';
-            // Xóa phần văn bản tạm thời
             interimTranscriptSpan.textContent = '';
+            statusDiv.textContent = 'Trạng thái: Nhận dạng hoàn tất';
         } else {
-            // Nếu là kết quả tạm thời
-            // Cập nhật (thay thế) phần văn bản tạm thời
             interimTranscriptSpan.textContent = result.transcript;
         }
     };
 
     ws.onclose = () => {
         statusDiv.textContent = 'Trạng thái: Đã ngắt kết nối';
-        // startButton.disabled = true;
-        pauseButton.disabled = true;
-        resumeButton.disabled = true;
         stopButton.disabled = true;
     };
+
     ws.onerror = (err) => {
         statusDiv.textContent = 'Lỗi WebSocket';
         console.error('WebSocket error:', err);
@@ -79,7 +71,7 @@ function updateVolumeMeter(data) {
         sum += data[i] * data[i];
     }
     let rms = Math.sqrt(sum / data.length);
-    let percent = Math.min(100, Math.floor(rms * 200));
+    let percent = Math.min(100, Math.floor(rms * 500));
     volumeLevel.style.width = percent + '%';
 }
 
@@ -87,8 +79,7 @@ async function startRecording() {
     // Đảm bảo kết nối WebSocket đã mở
     if (ws.readyState !== WebSocket.OPEN) {
         console.warn("WebSocket chưa sẵn sàng, đang cố gắng kết nối lại...");
-        connectWebSocket(); // Cố gắng kết nối lại
-        // Chờ một chút để kết nối thiết lập (thêm delay hoặc dùng Promise)
+        connectWebSocket();
         await new Promise(resolve => setTimeout(resolve, 1000));
         if (ws.readyState !== WebSocket.OPEN) {
             statusDiv.textContent = 'Lỗi: Không thể kết nối WebSocket.';
@@ -105,11 +96,8 @@ async function startRecording() {
         processor = audioContext.createScriptProcessor(4096, 1, 1); // bufferSize, numberOfInputChannels, numberOfOutputChannels
 
         processor.onaudioprocess = (e) => {
-            if (!isRecording || isPaused) return; // Chỉ xử lý khi đang ghi âm và không tạm dừng
-            
             const data = e.inputBuffer.getChannelData(0); // Lấy dữ liệu âm thanh từ kênh đầu tiên
             updateVolumeMeter(data); // Cập nhật thanh âm lượng
-
             // --- VAD (Voice Activity Detection) đơn giản để không gửi âm thanh im lặng ---
             let sumOfSquares = 0.0;
             for (let i = 0; i < data.length; i++) {
@@ -122,21 +110,17 @@ async function startRecording() {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(pcmData.buffer); // Gửi dữ liệu qua WebSocket
                 }
-            }
+            }   
         };
 
         input.connect(processor); // Kết nối đầu vào từ microphone đến bộ xử lý
         processor.connect(audioContext.destination); // Kết nối bộ xử lý đến đầu ra (không bắt buộc nhưng là luồng bình thường)
-
-        isRecording = true;
-        isPaused = false; // Đảm bảo không bị tạm dừng khi bắt đầu
-        
-        // Cập nhật trạng thái và nút trên giao diện
+    
         startButton.disabled = true;
-        pauseButton.disabled = false;
-        resumeButton.disabled = true;
-        stopButton.disabled = false;
+        stopButton.disabled = false;        
+        ws.send(JSON.stringify({ command: "start_recognition" }));
         statusDiv.textContent = 'Trạng thái: Đang ghi âm...';
+        is_recording = true;
 
     } catch (error) {
         console.error('Lỗi khi truy cập microphone hoặc AudioContext:', error);
@@ -146,8 +130,6 @@ async function startRecording() {
 }
 
 function stopRecording() {
-    isRecording = false;
-    isPaused = false;
     if (processor) {
         processor.disconnect();
         processor.onaudioprocess = null;
@@ -162,29 +144,21 @@ function stopRecording() {
         stream = null;
     }
     startButton.disabled = false;
-    pauseButton.disabled = true;
-    resumeButton.disabled = true;
     stopButton.disabled = true;
-    statusDiv.textContent = 'Trạng thái: Đã dừng ghi âm';
+    copyButton.disabled = false;
+    ws.send(JSON.stringify({ command: "stop_recognition" }));
+    statusDiv.textContent = 'Trạng thái: Đang chờ kết quả cuối cùng...';
     volumeLevel.style.width = '0%';
 }
 
-function pauseRecording() {
-    if (isRecording && !isPaused) {
-        isPaused = true;
-        pauseButton.disabled = true;
-        resumeButton.disabled = false;
-        statusDiv.textContent = 'Trạng thái: Đang tạm dừng';
-    }
-}
-
-function resumeRecording() {
-    if (isRecording && isPaused) {
-        isPaused = false;
-        pauseButton.disabled = false;
-        resumeButton.disabled = true;
-        statusDiv.textContent = 'Trạng thái: Đang ghi âm...';
-    }
+function copyTranscript() {
+    const transcript = finalTranscriptSpan.textContent + interimTranscriptSpan.textContent;
+    navigator.clipboard.writeText(transcript).then(() => {
+        statusDiv.textContent = 'Trạng thái: Đã sao chép vào clipboard';
+    }).catch(err => {
+        console.error('Lỗi khi sao chép:', err);
+        statusDiv.textContent = 'Lỗi: Không thể sao chép vào clipboard';
+    });
 }
 
 function clearTranscript() {
@@ -193,7 +167,6 @@ function clearTranscript() {
 }
 
 startButton.addEventListener('click', startRecording);
-pauseButton.addEventListener('click', pauseRecording);
-resumeButton.addEventListener('click', resumeRecording);
 stopButton.addEventListener('click', stopRecording);
 clearButton.addEventListener('click', clearTranscript);
+copyButton.addEventListener('click', copyTranscript);

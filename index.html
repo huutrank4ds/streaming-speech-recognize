@@ -76,6 +76,7 @@
             font-size: 1em;
             cursor: pointer;
             transition: background 0.2s;
+            width: 150px;
         }
         .icon-btn:disabled {
             background: #e2e8f0;
@@ -96,16 +97,19 @@
         </div>
         <div class="controls">
             <button id="startButton" class="icon-btn">Bắt đầu</button>
-            <button id="pauseButton" class="icon-btn" disabled>Tạm dừng</button>
-            <button id="resumeButton" class="icon-btn" disabled>Ghi tiếp</button>
             <button id="stopButton" class="icon-btn" disabled>Dừng</button>
             <button id="clearButton" class="icon-btn">Xóa kết quả</button>
+            <button id="copyButton" class="icon-btn">Sao chép</button>
         </div>
         <div id="transcript">
             <span id="final-transcript"></span>
             <span id="interim-transcript" style="color: grey;"></span>
         </div>
     </div>
+    <!-- <div class="change-url-websocket">
+        <input type="text" id="wsUrl" placeholder="ws://localhost:8000" />
+        <button id="connectBtn">Kết nối</button>
+    </div> -->
     <script src="app.js"></script>
 </body>
 </html>

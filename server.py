@@ -28,7 +28,7 @@ PORT = args.port
 LANGUAGE_CODE = "vi-VN"
 SAMPLE_RATE = 16000
 
-async def handler(websocket, path):
+async def handler(websocket):
     print(f"Client connected: {websocket.remote_address}")
     client = speech.SpeechAsyncClient()
     config = speech.RecognitionConfig(
